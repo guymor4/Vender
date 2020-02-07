@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<meta charset="utf-8">
 	<title>Vender</title>
@@ -51,25 +52,44 @@
 			align-self: center;
 			height: 32px;
 		}
+
+		.option-tags {
+			
+			vertical-align: middle;
+		}
+
+		.option-tags span {
+			clear: both;
+			margin: auto;
+			margin-bottom: 0.2em;
+			opacity: 0.5;
+		}
 	</style>
 	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
+
 <body>
 	<div id="app" class="container-fluid">
 		<input id="search-input" class="form-control" type="textbox" oninput="update_suggestions()" />
 		<div class="list-container">
-			<div class="row option-row" :index="index" :key="name" v-for="(option, name, index) in option_list" :class="{ active: index == selectedIndex }">
+			<div class="row option-row" :index="index" :key="name" v-for="(option, name, index) in option_list"
+				:class="{ active: index == selectedIndex }">
 				<img class="col-md-auto option-icon" :src="'data:image/png;base64,' + option.icon" />
-				<div class="col-md-9">
+				<div class="col-md-* ml-3">
 					<div class="row">
-						<span class="col-md-11 option-name" v-html="highlight(name)"></span>
+						<span class="col-md-9 option-name" v-html="highlight(name)"></span>
 						<span class="col-md-11 option-path" v-html="option.target"></span>
 					</div>
+				</div>
+				<div class="ml-auto mr-4 float-right option-tags" :src="'data:image/png;base64,' + option.icon">
+					<span class="badge badge-info" v-html="option.source"></span>
 				</div>
 			</div>
 		</div>
 	</div>
 	<script type="text/javascript" src="js/bootstrap.js"></script>
+	<script src="./conf.js"></script>
 	<script src="./window.js"></script>
 </body>
+
 </html>

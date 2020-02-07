@@ -8,6 +8,16 @@ var app = undefined;
 var Options = {};
 var OptionsView = {};
 
+function Option (original_path, icon, target, source, desc) {
+	this.original_path = original_path;
+	this.icon = icon;
+	this.target = target;
+	this.source = source;
+	this.desc = desc;
+	console.log(this)
+	return this;
+}
+
 function start_file(file_path) {
 	return spawn('start', ['""', '"""' + file_path + '""" ' ], { shell: true, detached: true })
 }
@@ -18,26 +28,28 @@ function expand_path(path) {
 	return path.replace(/%([^%]+)%/g, (_,n) => process.env[n])
 }
 
-function add_options_from_dirlist(base_path, dirlist) {
-	for (var i = 0; i < dirlist.length; i++) {
-		var lnk = path.join(base_path, dirlist[i]);
+function collect_options_from_dirlist(lnk_filepaths, source) {
+	for (var i in lnk_filepaths) {
+		var lnk = lnk_filepaths[i];
 		var program_name = path.basename(lnk, path.extname(lnk));
-
-		new_option = { path: lnk, icon: '', target: '', desc : '' };
-		new_option.target = expand_path(utils.ResolveLnk(lnk));
-		console.log(lnk, new_option.target);
-		if(!new_option.target || !fs.existsSync(new_option.target)) {
+		
+		target = expand_path(utils.ResolveLnk(lnk));
+		console.log(lnk, target);
+		if(!target || !fs.existsSync(target)) {
 			continue;
 		}
-		new_option.icon = utils.ExtractIconAsBase64(lnk);
-		Options[program_name] = new_option;
+
+		icon = utils.ExtractIconAsBase64(lnk);
+		Options[program_name] = new Option(original_path=lnk, icon=icon, target=target, source=source, desc='');
 	}
 }
 
-function add_shortcuts_from_dir(raw_dir_path) {
-	var dir_path = expand_path(raw_dir_path);
-	lnk_files = fs.readdirSync(dir_path).filter(entry => entry.endsWith('.url') || entry.endsWith('.lnk'));
-	add_options_from_dirlist(dir_path, lnk_files);
+function get_shortcuts_from_folder(folder_path) {
+	if (!fs.existsSync(folder_path)){
+		console.error(folder_path, 'does not exists!')
+		return [];
+	}
+	return fs.readdirSync(folder_path).filter(entry => entry.endsWith('.url') || entry.endsWith('.lnk')).map(entry => expand_path(path.join(folder_path, entry)));
 }
 
 document.addEventListener("keydown", event => {
@@ -57,8 +69,8 @@ document.addEventListener("keydown", event => {
 			break;
 		case 'Enter':
 			var selectedOption = Object.values(OptionsView)[app.selectedIndex];
-			console.log(selectedOption.path);
-			start_file(selectedOption.path)
+			console.log(selectedOption.target);
+			start_file(selectedOption.target)
 			remote.getCurrentWindow().close();
 			break;
 	}
@@ -85,15 +97,15 @@ function update_suggestions() {
 		}
 	}
 
-
 	app.selectedIndex = Math.min(app.selectedIndex, Object.keys(OptionsView).length - 1)
 }
 
 function main() {
-	var start_menu_links = add_shortcuts_from_dir('%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs')
-	var desktop_links = add_shortcuts_from_dir('%USERPROFILE%\\desktop')
-	var desktop_links = add_shortcuts_from_dir('%PUBLIC%\\desktop')
-	var desktop_links = add_shortcuts_from_dir('%AppData%\\Microsoft\\Windows\\Recent')
+	for (var i in LNK_SOURCES) {
+		var lnk_source = LNK_SOURCES[i]
+		var lnk_filepaths = get_shortcuts_from_folder(expand_path(lnk_source.path));
+		collect_options_from_dirlist(lnk_filepaths, lnk_source.source);
+	}
 
 	app = new Vue({ 
 			el: '#app',
