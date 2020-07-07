@@ -13,7 +13,7 @@
 	"author": "Guy Mor",
 	"license": "MIT",
 	"devDependencies": {
-		"electron": "^4.2.6",
+		"electron": "^9.1.0",
 		"electron-builder": "latest",
 		"electron-rebuild": "^1.8.5"
 	},
